@@ -11,67 +11,70 @@ import java.util.stream.Collectors;
 public class ServerFileLog {
 
     public static final String DELIMITER_SPACE = " ";
-    
+
     public Map<String, Server> listServer = new HashMap<>();
 
-   public ServerFileLog(File file) throws IOException {
-       BufferedReader br = new BufferedReader(new FileReader(file));
-       br.lines().map(st -> st.split(DELIMITER_SPACE))
-               .filter(line -> getDateFromLong(line[0]).isAfter(LocalDateTime.now().minusHours(1)))
-               .forEach(line -> this.addConnexion(line[1], line[2], getDateFromLong(line[0])));
+    public ServerFileLog(File file) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        br.lines().map(st -> st.split(DELIMITER_SPACE))
+                .filter(line -> getDateFromLong(line[0]).isAfter(LocalDateTime.now().minusHours(1)))
+                .forEach(line -> this.addConnexion(line[1], line[2], getDateFromLong(line[0])));
     }
 
     private LocalDateTime getDateFromLong(String string) {
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(Long.valueOf(string)), TimeZone.getDefault().toZoneId());
     }
 
-    private boolean isExist(String name){
+    private boolean isExist(String name) {
         return listServer.containsKey(name);
     }
 
-    public List<Server> getCallingServersFor(String serverName){
-       List<Server> result = new ArrayList<>();
-       if(isExist(serverName)) {
-           result = listServer.get(serverName).listOfCalledServer.stream()
-                   .map(x -> listServer.get(x.calledServer.name))
-                   .collect(Collectors.toList());
-       }
-       return result;
-    }
-
-    public List<Server> getCalledServerBy(String serverName){
+    public List<Server> getCallingServersFor(String serverName) {
         List<Server> result = new ArrayList<>();
-        if(isExist(serverName)) {
-            result = listServer.get(serverName).listOfCallingServer.stream()
-                .map(x->listServer.get(x.calledServer.name))
-                .collect(Collectors.toList());
+        if (isExist(serverName)) {
+            result = listServer.get(serverName).listOfCalledServer.stream()
+                    .map(x -> listServer.get(x.calledServer.name))
+                    .collect(Collectors.toList());
         }
         return result;
     }
 
-    public List<Server> getMostConnectedServer(){
-      Long max = listServer.entrySet().stream()
-              .max((o1, o2) -> o1.getValue().nbConnexion.compareTo(o2.getValue().nbConnexion))
-              .get().getValue().nbConnexion;
-
-      return listServer.entrySet().stream()
-              .filter(entry -> entry.getValue().nbConnexion.equals(max))
-              .map(entry -> entry.getValue())
-              .collect(Collectors.toList());
+    public List<Server> getCalledServerBy(String serverName) {
+        List<Server> result = new ArrayList<>();
+        if (isExist(serverName)) {
+            result = listServer.get(serverName).listOfCallingServer.stream()
+                    .map(x -> listServer.get(x.calledServer.name))
+                    .collect(Collectors.toList());
+        }
+        return result;
     }
 
-    private Server addServer(String name){
+    public List<Server> getMostConnectedServer() {
+        Long max = !listServer.isEmpty()
+                ? listServer.entrySet().stream()
+                .max((o1, o2) -> o1.getValue().nbConnexion.compareTo(o2.getValue().nbConnexion))
+                .get().getValue().nbConnexion
+                : null;
+
+        return max != null ? listServer.entrySet().stream()
+                .filter(entry -> entry.getValue().nbConnexion.equals(max))
+                .map(entry -> entry.getValue())
+                .collect(Collectors.toList())
+                : new ArrayList<>();
+    }
+
+    private Server addServer(String name) {
         Server server = null;
-        if(!isExist(name)){
+        if (!isExist(name)) {
             server = new Server(name);
             listServer.put(name, server);
-        }else{
+        } else {
             server = listServer.get(name);
         }
         return server;
     }
 
-    private void addConnexion(String caller, String called, LocalDateTime time){
+    private void addConnexion(String caller, String called, LocalDateTime time) {
         Server callerServer = addServer(caller);
         Server calledServer = addServer(called);
         calledServer.isCalledBy(callerServer, time);
