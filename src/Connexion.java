@@ -1,13 +1,28 @@
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.TimeZone;
 
+/**
+ * Class Connexion: englobe un serveur appelé
+ *
+ * @author Saddem
+ */
 public class Connexion {
 
+    /**
+     * Le serveur appelé.
+     */
     Server calledServer;
+
+    /**
+     * L'heure d'appel.
+     */
     LocalDateTime time;
 
+    /**
+     * Constrructeur d'une connexion.
+     *
+     * @param calledServer Le serveur appelé.
+     * @param time         L'heure d'appel.
+     */
     public Connexion(Server calledServer, LocalDateTime time) {
         this.calledServer = calledServer;
         this.time = time;
